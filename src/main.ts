@@ -1,22 +1,25 @@
-let xPlayer = document.querySelector("#xPlayer"),
-	oPlayer = document.querySelector("#oPlayer"),
-	start = document.querySelector(".start"),
-	inputBox = document.querySelector(".players"),
-	leaderBoard = document.querySelector(".leaderBoard"),
-	playerName = document.querySelector(".name.player"),
-	playerScore = document.querySelector(".score.player"),
-	xoBox = document.querySelector(".xoBox");
+let xPlayer = document.querySelector<HTMLInputElement>("#xPlayer"),
+	oPlayer = document.querySelector<HTMLInputElement>("#oPlayer"),
+	start = document.querySelector<HTMLParagraphElement>(".start"),
+	inputBox = document.querySelector<HTMLDivElement>(".players"),
+	leaderBoard = document.querySelector<HTMLUListElement>(".leaderBoard"),
+	xoBox = document.querySelector<HTMLDivElement>(".xoBox");
 
 //Start The Game.
-start.addEventListener("click", (e) => {
+type Player = {
+	name: string;
+	score: number;
+};
+start?.addEventListener("click", (e) => {
 	e.preventDefault();
-	let players = [
+	if (xPlayer?.value === undefined || oPlayer?.value === undefined) return;
+	let players: Player[] = [
 		{
-			name: xPlayer.value !== "" ? xPlayer.value : "",
+			name: xPlayer?.value !== "" ? xPlayer?.value : "",
 			score: 0,
 		},
 		{
-			name: oPlayer.value !== "" ? oPlayer.value : "",
+			name: oPlayer?.value !== "" ? oPlayer?.value : "",
 			score: 0,
 		},
 	];
@@ -24,47 +27,51 @@ start.addEventListener("click", (e) => {
 	//Check If Name Fields Is Not Empty Save Player Data In The Local Storage Else Send Message.
 	if (players[0].name !== "" && players[1].name !== "" && players[0].name !== players[1].name) {
 		localStorage.setItem("players", JSON.stringify(players));
-		inputBox.classList.add("hide");
-		xoBox.classList.add("show");
+		inputBox?.classList.add("hide");
+		xoBox?.classList.add("show");
 	} else {
-		let body = document.querySelector("body"),
+		let body = document.querySelector<HTMLBodyElement>("body"),
 			msg = `<ol class='msg'>
 							<li>Please Fill The Names Field</li>
 							<li>Don't Use The Same Names In Both Fields</li>
 							<span class='close'>X</span>
 						</ol>`;
-		body.insertAdjacentHTML("afterbegin", msg);
+		body?.insertAdjacentHTML("afterbegin", msg);
+		if (start === null || start === undefined) return;
 		start.style.pointerEvents = "none";
 
 		//Close The Warning Message.
-		let close = document.querySelector(".close");
-		close.addEventListener("click", () => {
-			let msg = document.querySelector(".msg");
-			msg.classList.add("hide");
+		let close = document.querySelector<HTMLSpanElement>(".close");
+		close?.addEventListener("click", () => {
+			let msg = document.querySelector<HTMLOListElement>(".msg");
+			msg?.classList.add("hide");
+			if (start === null || start === undefined) return;
 			start.style.pointerEvents = "unset";
 		});
 	}
 });
 
-let squares = document.querySelectorAll(".square"),
-	emptySquare;
-turn = "x";
+let squares = document.querySelectorAll(".square") as NodeListOf<HTMLElement>,
+	emptySquare,
+	turn: string = "x";
 //Print X & O In The Squares
 squares.forEach((s, index) => {
 	emptySquare = Array.from(squares).filter((s) => s.getAttribute("value") !== null);
-	s.setAttribute("num", index + 1);
+	s.setAttribute("num", (index + 1).toString());
 	s.addEventListener("click", (e) => {
 		e.stopPropagation();
+		if (e.target === null) return;
+		const Target = e.target as HTMLElement;
 		//Prevent Click When There Is No Empty Squares OR Squares Have Been Clicked .
-		if (emptySquare.length !== 9 && e.target.getAttribute("value") == null) {
+		if (emptySquare.length !== 9 && Target.getAttribute("value") == null) {
 			//Print & Save The Values Of X & O.
 			if (turn === "x") {
-				e.target.textContent = "X";
-				e.target.setAttribute("value", "x");
+				Target.textContent = "X";
+				Target.setAttribute("value", "x");
 				turn = "o";
 			} else {
-				e.target.textContent = "O";
-				e.target.setAttribute("value", "o");
+				Target.textContent = "O";
+				Target.setAttribute("value", "o");
 				turn = "x";
 			}
 		}
@@ -72,8 +79,8 @@ squares.forEach((s, index) => {
 });
 
 //Win Conditions
-let winBox = document.querySelector(".winBox"),
-	playersData = JSON.parse(localStorage.getItem("players"));
+let winBox = document.querySelector<HTMLDivElement>(".winBox");
+let playersData: Player[] = JSON.parse(localStorage.getItem("players") || "[]");
 squares.forEach((s) => {
 	s.addEventListener("click", () => {
 		emptySquare = Array.from(squares).filter((s) => s.getAttribute("value") !== null);
@@ -99,6 +106,7 @@ squares.forEach((s) => {
 			squares.forEach((s) => {
 				s.style.pointerEvents = "none";
 			});
+			if (winBox === null) return;
 			winBox.classList.add("show");
 			winBox.innerHTML = `
       <span>Draw</span>
@@ -108,21 +116,22 @@ squares.forEach((s) => {
       </div>`;
 
 			//Start A New Round Function
-			playersData = JSON.parse(localStorage.getItem("players"));
+			playersData = JSON.parse(localStorage.getItem("players") || " []");
 			newRound();
 		}
 	});
 });
 
 //Get The Value Of Specific Square
-function getValue(index) {
-	if (squares[index].hasAttribute("value")) {
-		return squares[index].getAttribute("value");
+function getValue(index: number): string {
+	if (squares[index].hasAttribute("value") && squares !== null) {
+		return squares[index].getAttribute("value") || "";
 	}
+	return "";
 }
 
 //Check If The Is A Match Squeres
-function winCondition(firstVal, secondVal, thirdVal) {
+function winCondition(firstVal: number, secondVal: number, thirdVal: number): boolean {
 	return (
 		getValue(firstVal) !== undefined &&
 		getValue(firstVal) == getValue(secondVal) &&
@@ -132,11 +141,11 @@ function winCondition(firstVal, secondVal, thirdVal) {
 
 function newRound() {
 	//Start New Round
-	let newRoundBtn = document.querySelector(".winBox .new");
+	let newRoundBtn = document.querySelector<HTMLButtonElement>(".winBox .new");
 	//Reset The Game And All Values
-	newRoundBtn.addEventListener("click", () => {
-		winBox.classList.remove("show");
-		leaderBoard.classList.add("show");
+	newRoundBtn?.addEventListener("click", () => {
+		winBox?.classList.remove("show");
+		leaderBoard?.classList.add("show");
 		squares.forEach((s) => {
 			s.style.pointerEvents = "unset";
 			s.textContent = "";
@@ -145,6 +154,7 @@ function newRound() {
 
 		//Save The Last Game The Data And Show It In The LeaderBoard
 		localStorage.setItem("players", JSON.stringify(playersData));
+		if (leaderBoard === null) return;
 		leaderBoard.innerHTML = `
 		<ul>
 			<li>
@@ -164,8 +174,9 @@ function newRound() {
 	});
 }
 
-function endGame(value) {
-	playersData = JSON.parse(localStorage.getItem("players"));
+function endGame(value: number) {
+	playersData = JSON.parse(localStorage.getItem("players") || "[]");
+	if (winBox === null) return;
 	winBox.classList.add("show");
 	winBox.innerHTML = `
 	<span>${getValue(value).toUpperCase()} Win</span>
@@ -180,17 +191,20 @@ function endGame(value) {
 	});
 
 	//Check The Winner Value
-	let winner = document.querySelector(".winBox span").textContent[0];
-	if (winner == "X") {
-		playersData[0].score++;
-	} else {
-		playersData[1].score++;
+	let winner = document.querySelector<HTMLSpanElement>(".winBox span");
+	if (winner) {
+		const firstChart = winBox.textContent ? winBox.textContent[0] : "";
+		if (firstChart == "X") {
+			playersData[0].score++;
+		} else {
+			playersData[1].score++;
+		}
 	}
 
 	//new Round
 	newRound();
 
 	//End Game Event
-	let end = document.querySelector(".winBox .end");
-	end.addEventListener("click", () => window.reload());
+	let end = document.querySelector<HTMLButtonElement>(".winBox .end");
+	end?.addEventListener("click", () => window.location.reload());
 }
